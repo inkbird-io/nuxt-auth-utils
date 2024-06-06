@@ -153,5 +153,10 @@ export default defineNuxtModule<ModuleOptions>({
       clientId: '',
       clientSecret: '',
     })
+    // X.com/Twitter OAuth
+    runtimeConfig.oauth.x = defu(runtimeConfig.oauth.x, {
+      clientId: '',
+      clientSecret: '',
+    })
   },
 })
