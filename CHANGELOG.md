@@ -1,6 +1,18 @@
 # Changelog
 
 
+## v0.0.29
+
+[compare changes](https://undefined/undefined/compare/v0.0.28...v0.0.29)
+
+### 🩹 Fixes
+
+- Release script (888d24f)
+
+### ❤️ Contributors
+
+- Navanjr <nate@inkbird.io>
+
 ## v0.0.28
 
 [compare changes](https://undefined/undefined/compare/v0.0.26...v0.0.28)
