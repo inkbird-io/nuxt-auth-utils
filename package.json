@@ -1,6 +1,6 @@
 {
   "name": "@inkbird-io/nuxt-auth-utils",
-  "version": "0.0.27",
+  "version": "0.0.28",
   "description": "Minimalist Auth module for Nuxt with SSR",
   "repository": "@inkbird-io/nuxt-auth-utils",
   "license": "MIT",

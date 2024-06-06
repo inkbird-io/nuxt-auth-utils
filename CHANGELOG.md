@@ -1,6 +1,22 @@
 # Changelog
 
 
+## v0.0.28
+
+[compare changes](https://undefined/undefined/compare/v0.0.26...v0.0.28)
+
+### 🩹 Fixes
+
+- Adds scope to project name and repo (c38237f)
+
+### 🏡 Chore
+
+- **release:** V0.0.27 (cd945d1)
+
+### ❤️ Contributors
+
+- Navanjr <nate@inkbird.io>
+
 ## v0.0.27
 
 [compare changes](https://github.com/inkbird-io/nuxt-auth-utils/compare/v0.0.26...v0.0.27)
