@@ -12,4 +12,12 @@ export default defineNuxtConfig({
   imports: {
     autoImport: true,
   },
+  runtimeConfig: {
+    oauth: {
+      discord: {
+        clientId: process.env.NUXT_OAUTH_DISCORD_CLIENT_ID || 'crapId',
+        clientSecret: process.env.NUXT_OAUTH_DISCORD_CLIENT_SECRET || 'crapSecret'
+      },
+    }
+  }
 })
