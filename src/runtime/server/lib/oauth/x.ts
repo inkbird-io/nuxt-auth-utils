@@ -64,13 +64,13 @@ export function xEventHandler({
   onError,
 }: OAuthConfig<OAuthXConfig>) {
   return eventHandler(async (event: H3Event) => {
-    console.log('navanjr - handling x login')
     config = defu(config, useRuntimeConfig(event).oauth?.x, {
       authorizationURL: 'https://x.com/i/oauth2/authorize?scope=users.read+tweet.read+offline.access',
       tokenURL: 'https://api.x.com/2/oauth2/token',
       authorizationParams: {},
     }) as OAuthXConfig
     const query = getQuery(event)
+    console.log('navanjr - handling x login', { config, query })
 
     if (query.error) {
       const error = createError({
