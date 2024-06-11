@@ -25,23 +25,22 @@ export interface OAuthXConfig {
   clientSecret?: string
   /**
    * X OAuth Scope
-   * @default []
    * @see https://developers.x.com/docs/permissions
-   * @example [ 'email' ],
+   * @example [ 'tweet.read' ],
    */
   scope?: string[]
 
   /**
    * X OAuth User Fields
    * @default [ 'id', 'name'],
-   * @see https://https://developer.x.com/en/docs/twitter-api/users/lookup/api-reference/get-users-me
+   * @see https://developer.x.com/en/docs/twitter-api/users/lookup/api-reference/get-users-me
    * @example [ 'id', 'name', 'email' ],
    */
   fields?: string[]
 
   /**
    * X OAuth Authorization URL
-   * @default 'https://x.com/i/oauth2/authorize?scope=users.read+tweet.read+offline.access'
+   * @default 'https://x.com/i/oauth2/authorize'
    */
   authorizationURL?: string
 
@@ -64,14 +63,18 @@ export function xEventHandler({
   onError,
 }: OAuthConfig<OAuthXConfig>) {
   return eventHandler(async (event: H3Event) => {
-    config = defu(config, useRuntimeConfig(event).oauth?.x, {
-      authorizationURL: 'https://x.com/i/oauth2/authorize?scope=users.read+tweet.read+offline.access',
-      tokenURL: 'https://api.x.com/2/oauth2/token',
-      authorizationParams: {},
+    const xConfig = useRuntimeConfig(event).oauth?.x
+    config = defu(config, xConfig, {
+      authorizationURL: 'https://twitter.com/i/oauth2/authorize',
+      tokenURL: 'https://api.twitter.com/2/oauth2/token',
+      authorizationParams: {
+        response_type: 'code',
+        code_challenge: 'challenge',
+        code_challenge_method: 'plain',
+      },
+      scope: ['tweet.read', 'users.read', 'offline.access'],
     }) as OAuthXConfig
     const query = getQuery(event)
-    console.log('navanjr - handling x login', { config, query })
-
     if (query.error) {
       const error = createError({
         statusCode: 401,
@@ -96,14 +99,17 @@ export function xEventHandler({
 
     if (!query.code) {
       config.scope = config.scope || []
+      const theRequestURL = withQuery(config.authorizationURL as string, {
+        client_id: config.clientId,
+        redirect_uri: redirectUrl,
+        scope: config.scope.join(' '),
+        ...config.authorizationParams,
+      })
+      console.log('navanjr - handling x login', { config, xConfig, query, theRequestURL })
       // Redirect to X Oauth page
       return sendRedirect(
         event,
-        withQuery(config.authorizationURL as string, {
-          client_id: config.clientId,
-          redirect_uri: redirectUrl,
-          scope: config.scope.join(' '),
-        }),
+        theRequestURL,
       )
     }
 
@@ -148,3 +154,22 @@ export function xEventHandler({
     })
   })
 }
+
+// const testUrl = 'https://twitter.com/i/oauth2/authorize?response_type=code&client_id=NVQtY3lYTzh0MFF5eHI0aDhyRTY6MTpjaQ&redirect_uri=http%3A%2F%2Flocalhost%3A3000%2Fauth%2Fx&scope=tweet.read%20users.read%20offline.access&state=state&code_challenge=challenge&code_challenge_method=plain'
+
+// https://twitter.com/i/oauth2/authorize
+// ?client_id=WlFsaFZXNmpZU2lLRlRHWkxBUjM6MTpjaQ
+// &redirect_uri=http%3A%2F%2F127.0.0.1%2Foauth%2Fcallback
+// &response_type=code
+// &scope=tweet.read+follows.read+mute.read+like.read+block.read+offline.access
+// &state=0-rsJAIDgALlYWs0SDQNIUWwzniGEGFfHy-OpbugHmw%3D
+// &code_challenge=challenge
+// &code_challenge_method=plain
+
+// https://twitter.com/i/oauth2/authorize
+// ?client_id=NVQtY3lYTzh0MFF5eHI0aDhyRTY6MTpjaQ
+// &redirect_uri=http%3A%2F%2Flocalhost%3A3000%2Fauth%2Fx
+// &scope=tweet.read+users.read+offline.access
+// &response_type=code
+// &code_challenge=challenge
+// &code_challenge_method=plain
