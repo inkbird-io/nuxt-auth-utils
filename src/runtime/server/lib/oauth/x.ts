@@ -9,7 +9,9 @@ import {
 import { ofetch } from 'ofetch'
 import { withQuery } from 'ufo'
 import { defu } from 'defu'
-import { useRuntimeConfig } from '#imports'
+import { TwitterApi } from 'twitter-api-v2'
+import { useState } from 'nuxt/app'
+import { useRuntimeConfig, useStorage } from '#imports'
 import type { OAuthConfig } from '#auth-utils'
 
 export interface OAuthXConfig {
@@ -74,6 +76,7 @@ export function xEventHandler({
       },
       scope: ['tweet.read', 'users.read', 'offline.access'],
     }) as OAuthXConfig
+
     const query = getQuery(event)
     if (query.error) {
       const error = createError({
@@ -96,80 +99,60 @@ export function xEventHandler({
     }
 
     const redirectUrl = getRequestURL(event).href
-
+    const { clientId, clientSecret } = config
+    const twitter = new TwitterApi({ clientId, clientSecret })
+    console.log('navanjr', { clientId, clientSecret })
     if (!query.code) {
-      config.scope = config.scope || []
-      const theRequestURL = withQuery(config.authorizationURL as string, {
-        client_id: config.clientId,
-        redirect_uri: redirectUrl,
-        scope: config.scope.join(' '),
-        ...config.authorizationParams,
-      })
-      console.log('navanjr - handling x login', { config, xConfig, query, theRequestURL })
+      const { url: theRequestURL, codeVerifier, state } = twitter.generateOAuth2AuthLink(redirectUrl, { scope: config.scope })
+      await useStorage().setItem(`twitter:${state}`, { theRequestURL, codeVerifier, state, redirectUrl })
+      console.log('navanjr - handling x login', { theRequestURL, codeVerifier, state, redirectUrl })
+
+      // const theRequestURL = await twitter.generateAuthLink(redirectUrl)
+      // console.log('navanjr - handling x login', { theRequestURL })
+
       // Redirect to X Oauth page
       return sendRedirect(
         event,
         theRequestURL,
       )
     }
-
-    // TODO: improve typing
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const tokens: any = await $fetch(config.tokenURL as string, {
-      method: 'POST',
-      body: {
-        client_id: config.clientId,
-        client_secret: config.clientSecret,
-        redirect_uri: redirectUrl,
+    const storedState: any = await useStorage().getItem(`twitter:${query.state}`)
+    if (query.code && query.state && storedState?.codeVerifier) {
+      const loginArgs = {
         code: query.code,
-      },
-    })
-    if (tokens.error) {
-      const error = createError({
-        statusCode: 401,
-        message: `X login failed: ${tokens.error || 'Unknown error'}`,
-        data: tokens,
+        codeVerifier: storedState.codeVerifier,
+        redirectUri: storedState.redirectUrl,
+      }
+      console.log('navanjr - still handling x login', JSON.stringify({ query, storedState, loginArgs }, null, 2))
+      const { client: loggedClient, accessToken, refreshToken, expiresIn } = await twitter.loginWithOAuth2(loginArgs).catch((e) => {
+        console.log('navanjr - error', { e })
       })
-      if (!onError) throw error
-      return onError(event, error)
+      console.log('navanjr - still handling x login', { query, storedState, loggedClient })
+      // if (tokens.error) {
+      //   const error = createError({
+      //     statusCode: 401,
+      //     message: `X login failed: ${tokens.error || 'Unknown error'}`,
+      //     data: tokens,
+      //   })
+      //   if (!onError) throw error
+      //   return onError(event, error)
+      // }
+
+      config.fields = ['created_at', 'description', 'entities', 'id', 'location', 'most_recent_tweet_id', 'name', 'pinned_tweet_id', 'profile_image_url', 'protected', 'public_metrics', 'url', 'username', 'verified', 'verified_type', 'withheld']
+      // const fields = config.fields.join(',')
+
+      // const user = await ofetch(
+      // `https://api.x.com/2/users/me?user.fields=profile_image_url`,
+      // )
+      const { data: user } = await loggedClient.v2.me({ 'user.fields': config.fields })
+      if (!user) {
+        throw new Error('X login failed: no user found')
+      }
+      console.log('navanjr', { user })
+      return onSuccess(event, {
+        user,
+        tokens: { accessToken, refreshToken, expiresIn },
+      })
     }
-
-    const accessToken = tokens.access_token
-    // TODO: improve typing
-
-    config.fields = config.fields || ['id', 'name']
-    const fields = config.fields.join(',')
-
-    const user = await ofetch(
-      `https://api.x.com/2/users/me?user.fields=profile_image_url`,
-    )
-
-    if (!user) {
-      throw new Error('X login failed: no user found')
-    }
-
-    return onSuccess(event, {
-      user,
-      tokens,
-    })
   })
 }
-
-// const testUrl = 'https://twitter.com/i/oauth2/authorize?response_type=code&client_id=NVQtY3lYTzh0MFF5eHI0aDhyRTY6MTpjaQ&redirect_uri=http%3A%2F%2Flocalhost%3A3000%2Fauth%2Fx&scope=tweet.read%20users.read%20offline.access&state=state&code_challenge=challenge&code_challenge_method=plain'
-
-// https://twitter.com/i/oauth2/authorize
-// ?client_id=WlFsaFZXNmpZU2lLRlRHWkxBUjM6MTpjaQ
-// &redirect_uri=http%3A%2F%2F127.0.0.1%2Foauth%2Fcallback
-// &response_type=code
-// &scope=tweet.read+follows.read+mute.read+like.read+block.read+offline.access
-// &state=0-rsJAIDgALlYWs0SDQNIUWwzniGEGFfHy-OpbugHmw%3D
-// &code_challenge=challenge
-// &code_challenge_method=plain
-
-// https://twitter.com/i/oauth2/authorize
-// ?client_id=NVQtY3lYTzh0MFF5eHI0aDhyRTY6MTpjaQ
-// &redirect_uri=http%3A%2F%2Flocalhost%3A3000%2Fauth%2Fx
-// &scope=tweet.read+users.read+offline.access
-// &response_type=code
-// &code_challenge=challenge
-// &code_challenge_method=plain

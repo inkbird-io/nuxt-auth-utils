@@ -8,7 +8,8 @@
     "generate": "nuxi generate"
   },
   "dependencies": {
+    "@inkbird-io/nuxt-auth-utils": "latest",
     "nuxt": "^3.11.2",
-    "@inkbird-io/nuxt-auth-utils": "latest"
+    "twitter-api-v2": "^1.17.1"
   }
 }
