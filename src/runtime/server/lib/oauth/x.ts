@@ -101,14 +101,9 @@ export function xEventHandler({
     const redirectUrl = getRequestURL(event).href
     const { clientId, clientSecret } = config
     const twitter = new TwitterApi({ clientId, clientSecret })
-    console.log('navanjr', { clientId, clientSecret })
     if (!query.code) {
       const { url: theRequestURL, codeVerifier, state } = twitter.generateOAuth2AuthLink(redirectUrl, { scope: config.scope })
       await useStorage().setItem(`twitter:${state}`, { theRequestURL, codeVerifier, state, redirectUrl })
-      console.log('navanjr - handling x login', { theRequestURL, codeVerifier, state, redirectUrl })
-
-      // const theRequestURL = await twitter.generateAuthLink(redirectUrl)
-      // console.log('navanjr - handling x login', { theRequestURL })
 
       // Redirect to X Oauth page
       return sendRedirect(
@@ -123,35 +118,24 @@ export function xEventHandler({
         codeVerifier: storedState.codeVerifier,
         redirectUri: storedState.redirectUrl,
       }
-      console.log('navanjr - still handling x login', JSON.stringify({ query, storedState, loginArgs }, null, 2))
       const { client: loggedClient, accessToken, refreshToken, expiresIn } = await twitter.loginWithOAuth2(loginArgs).catch((e) => {
-        console.log('navanjr - error', { e })
+        const error = createError({
+          statusCode: 401,
+          message: 'X login failed: Unknown error',
+          data: e,
+        })
+        if (!onError) throw error
+        return onError(event, error)
       })
-      console.log('navanjr - still handling x login', { query, storedState, loggedClient })
-      // if (tokens.error) {
-      //   const error = createError({
-      //     statusCode: 401,
-      //     message: `X login failed: ${tokens.error || 'Unknown error'}`,
-      //     data: tokens,
-      //   })
-      //   if (!onError) throw error
-      //   return onError(event, error)
-      // }
-
+      const tokens = { accessToken, refreshToken, expiresIn }
       config.fields = ['created_at', 'description', 'entities', 'id', 'location', 'most_recent_tweet_id', 'name', 'pinned_tweet_id', 'profile_image_url', 'protected', 'public_metrics', 'url', 'username', 'verified', 'verified_type', 'withheld']
-      // const fields = config.fields.join(',')
-
-      // const user = await ofetch(
-      // `https://api.x.com/2/users/me?user.fields=profile_image_url`,
-      // )
       const { data: user } = await loggedClient.v2.me({ 'user.fields': config.fields })
       if (!user) {
         throw new Error('X login failed: no user found')
       }
-      console.log('navanjr', { user })
       return onSuccess(event, {
         user,
-        tokens: { accessToken, refreshToken, expiresIn },
+        tokens,
       })
     }
   })
