@@ -6,11 +6,8 @@ import {
   getRequestURL,
   sendRedirect,
 } from 'h3'
-import { ofetch } from 'ofetch'
-import { withQuery } from 'ufo'
 import { defu } from 'defu'
 import { TwitterApi } from 'twitter-api-v2'
-import { useState } from 'nuxt/app'
 import { useRuntimeConfig, useStorage } from '#imports'
 import type { OAuthConfig } from '#auth-utils'
 
@@ -111,14 +108,14 @@ export function xEventHandler({
         theRequestURL,
       )
     }
-    const storedState: any = await useStorage().getItem(`twitter:${query.state}`)
+    const storedState: Record<string, string> = (await useStorage().getItem(`twitter:${query.state}`)) || {}
     if (query.code && query.state && storedState?.codeVerifier) {
       const loginArgs = {
-        code: query.code,
+        code: `${query.code}`,
         codeVerifier: storedState.codeVerifier,
         redirectUri: storedState.redirectUrl,
       }
-      const { client: loggedClient, accessToken, refreshToken, expiresIn } = await twitter.loginWithOAuth2(loginArgs).catch((e) => {
+      const twitterOAuthResponse = await twitter.loginWithOAuth2(loginArgs).catch((e) => {
         const error = createError({
           statusCode: 401,
           message: 'X login failed: Unknown error',
@@ -127,9 +124,10 @@ export function xEventHandler({
         if (!onError) throw error
         return onError(event, error)
       })
+      const { client: loggedClient, accessToken, refreshToken, expiresIn } = twitterOAuthResponse || {}
       const tokens = { accessToken, refreshToken, expiresIn }
       config.fields = ['created_at', 'description', 'entities', 'id', 'location', 'most_recent_tweet_id', 'name', 'pinned_tweet_id', 'profile_image_url', 'protected', 'public_metrics', 'url', 'username', 'verified', 'verified_type', 'withheld']
-      const { data: user } = await loggedClient.v2.me({ 'user.fields': config.fields })
+      const { data: user } = (loggedClient && await loggedClient.v2.me({ 'user.fields': config.fields })) || {}
       if (!user) {
         throw new Error('X login failed: no user found')
       }
