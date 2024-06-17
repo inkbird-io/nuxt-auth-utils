@@ -1,6 +1,19 @@
 # Changelog
 
 
+## v0.0.31
+
+[compare changes](https://undefined/undefined/compare/v0.0.30...v0.0.31)
+
+### 🩹 Fixes
+
+- Gets the playground using the fork (dbc41a7)
+- Playground uses inkbird-io fork (faacc75)
+
+### ❤️ Contributors
+
+- Navanjr <nate@inkbird.io>
+
 ## v0.0.30
 
 [compare changes](https://undefined/undefined/compare/v0.0.29...v0.0.30)
