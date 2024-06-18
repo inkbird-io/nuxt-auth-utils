@@ -1,6 +1,18 @@
 # Changelog
 
 
+## v0.0.32
+
+[compare changes](https://undefined/undefined/compare/v0.0.31...v0.0.32)
+
+### 🩹 Fixes
+
+- Fixes scope repeat bug with the X provider (c1a5caf)
+
+### ❤️ Contributors
+
+- Navanjr <nate@inkbird.io>
+
 ## v0.0.31
 
 [compare changes](https://undefined/undefined/compare/v0.0.30...v0.0.31)
