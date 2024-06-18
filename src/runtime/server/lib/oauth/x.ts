@@ -24,6 +24,7 @@ export interface OAuthXConfig {
   clientSecret?: string
   /**
    * X OAuth Scope
+   * @default ['tweet.read','users.read','offline.access']
    * @see https://developers.x.com/docs/permissions
    * @example [ 'tweet.read' ],
    */
@@ -63,16 +64,8 @@ export function xEventHandler({
 }: OAuthConfig<OAuthXConfig>) {
   return eventHandler(async (event: H3Event) => {
     const xConfig = useRuntimeConfig(event).oauth?.x
-    config = defu(config, xConfig, {
-      authorizationURL: 'https://twitter.com/i/oauth2/authorize',
-      tokenURL: 'https://api.twitter.com/2/oauth2/token',
-      authorizationParams: {
-        response_type: 'code',
-        code_challenge: 'challenge',
-        code_challenge_method: 'plain',
-      },
-      scope: ['tweet.read', 'users.read', 'offline.access'],
-    }) as OAuthXConfig
+    config = defu(config, xConfig) as OAuthXConfig
+    config.scope = ['tweet.read', 'users.read', 'offline.access']
 
     const query = getQuery(event)
     if (query.error) {
