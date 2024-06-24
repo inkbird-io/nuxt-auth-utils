@@ -10,7 +10,7 @@ export interface ModuleOptions {}
 export default defineNuxtModule<ModuleOptions>({
   meta: {
     name: 'auth-utils',
-    configKey: 'auth',
+    configKey: 'authUtils',
   },
   // Default configuration options of the Nuxt module
   defaults: {},
