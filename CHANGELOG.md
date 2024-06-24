@@ -1,6 +1,18 @@
 # Changelog
 
 
+## v0.0.33
+
+[compare changes](https://github.com/inkbird-io/nuxt-auth-utils/compare/v0.0.32...v0.0.33)
+
+### 🚀 Enhancements
+
+- Save this on the GH registry ([748ee3b](https://github.com/inkbird-io/nuxt-auth-utils/commit/748ee3b))
+
+### ❤️ Contributors
+
+- Navanjr ([@navanjr](http://github.com/navanjr))
+
 ## v0.0.32
 
 [compare changes](https://undefined/undefined/compare/v0.0.31...v0.0.32)
