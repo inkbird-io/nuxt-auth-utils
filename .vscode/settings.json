@@ -2,5 +2,13 @@
   "editor.codeActionsOnSave": {
     "source.fixAll.eslint": "explicit"
   },
-  "eslint.experimental.useFlatConfig": true,
+  "eslint.useFlatConfig": true,
+  "workbench.colorCustomizations": {
+    "commandCenter.border": "#ffffff3b",
+    "sash.hoverBorder": "#26a082",
+    "titleBar.activeBackground": "#26a082",
+    "titleBar.activeForeground": "#ffffff",
+    "titleBar.inactiveBackground": "#26a082",
+    "titleBar.inactiveForeground": "#d9d9d999"
+  }
 }
